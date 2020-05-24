@@ -1,0 +1,16 @@
+[grp1]
+host1
+host11
+
+[grp2]
+host2
+host12
+
+[grp3]
+host3
+host13
+
+[build:children]
+grp1
+grp2
+grp3

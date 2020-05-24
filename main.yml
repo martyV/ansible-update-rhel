@@ -1,0 +1,38 @@
+---
+- name: A playbook to update packages
+  hosts: build
+  become: true
+  gather_facts: no
+
+  vars_files:
+    - vars/main.yml
+
+  pre_tasks:
+    - name: Ensure dependencies are installed.
+      yum:
+        name:
+          - yum-utils
+        state: present
+      tags: pkg
+
+  tasks:
+    - name: Upgrade all packages
+      yum:
+        name: '*'
+        update_cache: yes
+        state: latest
+        exclude: "{{ exclude_packages }}"
+      tags: pkg
+
+    - name: Check if reboot is needed.
+      command: needs-restarting -r
+      register: needs_restart_result
+      failed_when: needs_restart_result.rc >= 2
+      changed_when: needs_restart_result.rc == 1
+      tags: reboot
+
+    - name: Reboot when needed.
+      reboot:
+        reboot_timeout: "{{ reboot_timeout }}"
+      when: needs_restart_result.rc == 1
+      tags: reboot
